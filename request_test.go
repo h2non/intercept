@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"github.com/nbio/st"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -300,4 +301,16 @@ func TestXMLEncodingError(t *testing.T) {
 	_, ok := err.(*xml.UnsupportedTypeError)
 	st.Expect(t, ok, true)
 	st.Expect(t, err.Error(), "xml: unsupported type: map[int]int")
+}
+
+func TestReaderWithBufferAsParameter(t *testing.T) {
+	req := &http.Request{Header: http.Header{}}
+	modifier := NewRequestModifier(req)
+	reader := bytes.NewBuffer([]byte("Hello"))
+	err := modifier.Reader(reader)
+	st.Expect(t, err, nil)
+	_, ok := req.Body.(io.ReadCloser)
+	st.Expect(t, ok, true)
+	body, _ := ioutil.ReadAll(req.Body)
+	st.Expect(t, string(body), "Hello")
 }

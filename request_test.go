@@ -278,3 +278,16 @@ func TestXMLWithStringAsParameter(t *testing.T) {
 	st.Expect(t, req.ContentLength, int64(len(input)))
 	st.Expect(t, req.Header.Get("Content-Type"), "application/xml")
 }
+
+func TestXMLWithBytesAsParameter(t *testing.T) {
+	req := &http.Request{Header: http.Header{}}
+	modifier := NewRequestModifier(req)
+	input := []byte(`<Person><Name>Rick</Name></Person>`)
+	err := modifier.XML(input)
+	st.Expect(t, err, nil)
+	modifiedBody, err := ioutil.ReadAll(req.Body)
+	st.Expect(t, err, nil)
+	st.Expect(t, string(modifiedBody), string(input))
+	st.Expect(t, req.ContentLength, int64(len(input)))
+	st.Expect(t, req.Header.Get("Content-Type"), "application/xml")
+}

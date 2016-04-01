@@ -39,7 +39,7 @@ func TestReadString(t *testing.T) {
 	bodyStr := `{"name":"Rick"}`
 	strReader := strings.NewReader(bodyStr)
 	body := ioutil.NopCloser(strReader)
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	str, err := modifier.ReadString()
 	st.Expect(t, err, nil)
@@ -48,7 +48,7 @@ func TestReadString(t *testing.T) {
 
 func TestReadStringError(t *testing.T) {
 	body := ioutil.NopCloser(&errorReader{})
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	str, err := modifier.ReadString()
 	st.Expect(t, err, errRead)
@@ -59,7 +59,7 @@ func TestReadBytes(t *testing.T) {
 	bodyBytes := []byte(`{"name":"Rick"}`)
 	strReader := bytes.NewBuffer(bodyBytes)
 	body := ioutil.NopCloser(strReader)
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	str, err := modifier.ReadBytes()
 	st.Expect(t, err, nil)
@@ -68,7 +68,7 @@ func TestReadBytes(t *testing.T) {
 
 func TestReadBytesError(t *testing.T) {
 	body := ioutil.NopCloser(&errorReader{})
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	buf, err := modifier.ReadBytes()
 	st.Expect(t, err, errRead)
@@ -79,7 +79,7 @@ func TestDecodeJSON(t *testing.T) {
 	bodyBytes := []byte(`{"name":"Rick"}`)
 	strReader := bytes.NewBuffer(bodyBytes)
 	body := ioutil.NopCloser(strReader)
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	u := user{}
 	err := modifier.DecodeJSON(&u)
@@ -89,7 +89,7 @@ func TestDecodeJSON(t *testing.T) {
 
 func TestDecodeJSONErrorFromReadBytes(t *testing.T) {
 	body := ioutil.NopCloser(&errorReader{})
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	u := user{}
 	err := modifier.DecodeJSON(&u)
@@ -101,7 +101,7 @@ func TestDecodeJSONEOF(t *testing.T) {
 	bodyBytes := []byte("")
 	strReader := bytes.NewBuffer(bodyBytes)
 	body := ioutil.NopCloser(strReader)
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	u := user{}
 	err := modifier.DecodeJSON(&u)
@@ -113,7 +113,7 @@ func TestDecodeJSONErrorFromDecode(t *testing.T) {
 	bodyBytes := []byte(`/`)
 	strReader := bytes.NewBuffer(bodyBytes)
 	body := ioutil.NopCloser(strReader)
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	u := user{}
 	err := modifier.DecodeJSON(&u)
@@ -127,7 +127,7 @@ func TestDecodeXML(t *testing.T) {
 	bodyBytes := []byte(`<Person><Name>Rick</Name></Person>`)
 	strReader := bytes.NewBuffer(bodyBytes)
 	body := ioutil.NopCloser(strReader)
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	u := user{}
 	err := modifier.DecodeXML(&u, nil)
@@ -137,7 +137,7 @@ func TestDecodeXML(t *testing.T) {
 
 func TestDecodeXMLErrorFromReadBytes(t *testing.T) {
 	body := ioutil.NopCloser(&errorReader{})
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	u := user{}
 	err := modifier.DecodeXML(&u, nil)
@@ -149,7 +149,7 @@ func TestDecodeXMLErrorFromDecode(t *testing.T) {
 	bodyBytes := []byte(`]]>`)
 	strReader := bytes.NewBuffer(bodyBytes)
 	body := ioutil.NopCloser(strReader)
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	u := user{}
 	err := modifier.DecodeXML(&u, nil)
@@ -163,7 +163,7 @@ func TestDecodeXMLEOF(t *testing.T) {
 	bodyBytes := []byte("")
 	strReader := bytes.NewBuffer(bodyBytes)
 	body := ioutil.NopCloser(strReader)
-	req := &http.Request{Header: http.Header{}, Body: body}
+	req := &http.Request{Body: body}
 	modifier := NewRequestModifier(req)
 	u := user{}
 	err := modifier.DecodeXML(&u, nil)
@@ -172,7 +172,7 @@ func TestDecodeXMLEOF(t *testing.T) {
 }
 
 func TestBytes(t *testing.T) {
-	req := &http.Request{Header: http.Header{}}
+	req := &http.Request{}
 	modifier := NewRequestModifier(req)
 	modifier.Bytes([]byte("hello"))
 	modifiedBody, err := ioutil.ReadAll(req.Body)
@@ -181,21 +181,21 @@ func TestBytes(t *testing.T) {
 }
 
 func TestStringGet(t *testing.T) {
-	req := &http.Request{Method: "GET", Header: http.Header{}}
+	req := &http.Request{Method: "GET"}
 	modifier := NewRequestModifier(req)
 	modifier.String("hello")
 	st.Expect(t, req.Body, nil)
 }
 
 func TestStringHead(t *testing.T) {
-	req := &http.Request{Method: "HEAD", Header: http.Header{}}
+	req := &http.Request{Method: "HEAD"}
 	modifier := NewRequestModifier(req)
 	modifier.String("hello")
 	st.Expect(t, req.Body, nil)
 }
 
 func TestString(t *testing.T) {
-	req := &http.Request{Method: "POST", Header: http.Header{}}
+	req := &http.Request{Method: "POST"}
 	modifier := NewRequestModifier(req)
 	modifier.String("hello")
 	modifiedBody, err := ioutil.ReadAll(req.Body)
@@ -304,7 +304,7 @@ func TestXMLEncodingError(t *testing.T) {
 }
 
 func TestReaderWithBufferAsParameter(t *testing.T) {
-	req := &http.Request{Header: http.Header{}}
+	req := &http.Request{}
 	modifier := NewRequestModifier(req)
 	reader := bytes.NewBuffer([]byte("Hello"))
 	err := modifier.Reader(reader)
@@ -316,7 +316,7 @@ func TestReaderWithBufferAsParameter(t *testing.T) {
 }
 
 func TestReaderWithReaderAsParameter(t *testing.T) {
-	req := &http.Request{Header: http.Header{}}
+	req := &http.Request{}
 	modifier := NewRequestModifier(req)
 	reader := bytes.NewReader([]byte("Hello"))
 	err := modifier.Reader(reader)
@@ -328,7 +328,7 @@ func TestReaderWithReaderAsParameter(t *testing.T) {
 }
 
 func TestReaderWithStringReaderAsParameter(t *testing.T) {
-	req := &http.Request{Header: http.Header{}}
+	req := &http.Request{}
 	modifier := NewRequestModifier(req)
 	reader := strings.NewReader("Hello")
 	err := modifier.Reader(reader)

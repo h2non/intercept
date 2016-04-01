@@ -291,3 +291,13 @@ func TestXMLWithBytesAsParameter(t *testing.T) {
 	st.Expect(t, req.ContentLength, int64(len(input)))
 	st.Expect(t, req.Header.Get("Content-Type"), "application/xml")
 }
+
+func TestXMLEncodingError(t *testing.T) {
+	req := &http.Request{Header: http.Header{}}
+	modifier := NewRequestModifier(req)
+	input := make(map[int]int)
+	err := modifier.XML(input)
+	_, ok := err.(*xml.UnsupportedTypeError)
+	st.Expect(t, ok, true)
+	st.Expect(t, err.Error(), "xml: unsupported type: map[int]int")
+}

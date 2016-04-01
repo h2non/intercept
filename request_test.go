@@ -326,3 +326,15 @@ func TestReaderWithReaderAsParameter(t *testing.T) {
 	body, _ := ioutil.ReadAll(req.Body)
 	st.Expect(t, string(body), "Hello")
 }
+
+func TestReaderWithStringReaderAsParameter(t *testing.T) {
+	req := &http.Request{Header: http.Header{}}
+	modifier := NewRequestModifier(req)
+	reader := strings.NewReader("Hello")
+	err := modifier.Reader(reader)
+	st.Expect(t, err, nil)
+	_, ok := req.Body.(io.ReadCloser)
+	st.Expect(t, ok, true)
+	body, _ := ioutil.ReadAll(req.Body)
+	st.Expect(t, string(body), "Hello")
+}

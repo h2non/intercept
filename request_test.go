@@ -251,3 +251,17 @@ func TestJSONEncodingError(t *testing.T) {
 	st.Expect(t, ok, true)
 	st.Expect(t, err.Error(), "json: unsupported type: map[int]int")
 }
+
+func TestXMLWithStructAsParameter(t *testing.T) {
+	req := &http.Request{Header: http.Header{}}
+	modifier := NewRequestModifier(req)
+	u := &user{Name: "Rick"}
+	err := modifier.XML(u)
+	st.Expect(t, err, nil)
+	modifiedBody, err := ioutil.ReadAll(req.Body)
+	st.Expect(t, err, nil)
+	expectedBody := `<Person><Name>Rick</Name></Person>`
+	st.Expect(t, string(modifiedBody), expectedBody)
+	st.Expect(t, req.ContentLength, int64(len(expectedBody)))
+	st.Expect(t, req.Header.Get("Content-Type"), "application/xml")
+}

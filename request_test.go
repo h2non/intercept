@@ -351,14 +351,14 @@ func TestRequest(t *testing.T) {
 }
 
 func TestHandleHTTPHEADRequest(t *testing.T) {
-	testHandleHttpNotIntercepted(t, "HEAD")
+	testHandleHTTPNotIntercepted(t, "HEAD")
 }
 
 func TestHandleHTTPOPTIONSRequest(t *testing.T) {
-	testHandleHttpNotIntercepted(t, "OPTIONS")
+	testHandleHTTPNotIntercepted(t, "OPTIONS")
 }
 
-func testHandleHttpNotIntercepted(t *testing.T, method string) {
+func testHandleHTTPNotIntercepted(t *testing.T, method string) {
 	interceptor := Request(func(m *RequestModifier) {
 		m.Header.Set("foo", "bar")
 	})

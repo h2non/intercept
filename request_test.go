@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"github.com/nbio/st"
+	"gopkg.in/vinci-proxy/utils.v0"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -337,4 +339,29 @@ func TestReaderWithStringReaderAsParameter(t *testing.T) {
 	st.Expect(t, ok, true)
 	body, _ := ioutil.ReadAll(req.Body)
 	st.Expect(t, string(body), "Hello")
+}
+
+func TestRequest(t *testing.T) {
+	intercepted := false
+	modifierFunc := func(m *RequestModifier) {
+		intercepted = true
+	}
+	interceptor := Request(modifierFunc)
+	interceptor.Modifier(&RequestModifier{})
+	st.Expect(t, intercepted, true)
+}
+
+func TestHandleHTTPHEADRequest(t *testing.T) {
+	modifierFunc := func(m *RequestModifier) {
+		m.Header.Set("foo", "bar")
+	}
+	w := utils.NewWriterStub()
+	req := &http.Request{Method: "HEAD", Header: make(http.Header)}
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "Hi")
+		st.Expect(t, r.Header.Get("foo"), "")
+	})
+	interceptor := Request(modifierFunc)
+	interceptor.HandleHTTP(w, req, handler)
+	st.Expect(t, string(w.Body), "Hi")
 }

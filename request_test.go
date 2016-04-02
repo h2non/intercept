@@ -365,3 +365,18 @@ func TestHandleHTTPHEADRequest(t *testing.T) {
 	interceptor.HandleHTTP(w, req, handler)
 	st.Expect(t, string(w.Body), "Hi")
 }
+
+func TestHandleHTTPOPTIONSRequest(t *testing.T) {
+	modifierFunc := func(m *RequestModifier) {
+		m.Header.Set("foo", "bar")
+	}
+	w := utils.NewWriterStub()
+	req := &http.Request{Method: "OPTIONS", Header: make(http.Header)}
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "Hi")
+		st.Expect(t, r.Header.Get("foo"), "")
+	})
+	interceptor := Request(modifierFunc)
+	interceptor.HandleHTTP(w, req, handler)
+	st.Expect(t, string(w.Body), "Hi")
+}

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"fmt"
 	"github.com/nbio/st"
 	"gopkg.in/vinci-proxy/utils.v0"
 	"io"
@@ -352,46 +351,38 @@ func TestRequest(t *testing.T) {
 }
 
 func TestHandleHTTPHEADRequest(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hi")
-		st.Expect(t, r.Header.Get("foo"), "")
-	})
-	interceptor := Request(func(m *RequestModifier) {
-		m.Header.Set("foo", "bar")
-	})
-	w := utils.NewWriterStub()
-	req := &http.Request{Method: "HEAD", Header: make(http.Header)}
-	interceptor.HandleHTTP(w, req, handler)
-	st.Expect(t, string(w.Body), "Hi")
+	testHandleHttpNotIntercepted(t, "HEAD")
 }
 
 func TestHandleHTTPOPTIONSRequest(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hi")
-		st.Expect(t, r.Header.Get("foo"), "")
-	})
+	testHandleHttpNotIntercepted(t, "OPTIONS")
+}
+
+func testHandleHttpNotIntercepted(t *testing.T, method string) {
 	interceptor := Request(func(m *RequestModifier) {
 		m.Header.Set("foo", "bar")
 	})
-	w := utils.NewWriterStub()
-	req := &http.Request{Method: "OPTIONS", Header: make(http.Header)}
-	interceptor.HandleHTTP(w, req, handler)
-	st.Expect(t, string(w.Body), "Hi")
+	stubbedWriter := utils.NewWriterStub()
+	req := &http.Request{Method: method, Header: make(http.Header)}
+	handler := http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
+		st.Expect(t, writer, stubbedWriter)
+		st.Expect(t, r.Header.Get("foo"), "")
+	})
+	interceptor.HandleHTTP(stubbedWriter, req, handler)
 }
 
 func TestHandleHTTP(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hi")
-		st.Expect(t, r.Header.Get("foo"), "bar")
-		requestBody, _ := ioutil.ReadAll(r.Body)
-		st.Expect(t, string(requestBody), "Hello")
-	})
 	interceptor := Request(func(m *RequestModifier) {
 		m.Header.Set("foo", "bar")
 		m.String("Hello")
 	})
-	w := utils.NewWriterStub()
+	stubbedWriter := utils.NewWriterStub()
 	req := &http.Request{Method: "POST", Header: make(http.Header)}
-	interceptor.HandleHTTP(w, req, handler)
-	st.Expect(t, string(w.Body), "Hi")
+	handler := http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
+		st.Expect(t, writer, stubbedWriter)
+		st.Expect(t, r.Header.Get("foo"), "bar")
+		requestBody, _ := ioutil.ReadAll(r.Body)
+		st.Expect(t, string(requestBody), "Hello")
+	})
+	interceptor.HandleHTTP(stubbedWriter, req, handler)
 }

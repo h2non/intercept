@@ -350,27 +350,6 @@ func TestRequest(t *testing.T) {
 	st.Expect(t, intercepted, true)
 }
 
-func TestHandleHTTPHEADRequest(t *testing.T) {
-	testHandleHTTPNotIntercepted(t, "HEAD")
-}
-
-func TestHandleHTTPOPTIONSRequest(t *testing.T) {
-	testHandleHTTPNotIntercepted(t, "OPTIONS")
-}
-
-func testHandleHTTPNotIntercepted(t *testing.T, method string) {
-	interceptor := Request(func(m *RequestModifier) {
-		m.Header.Set("foo", "bar")
-	})
-	stubbedWriter := utils.NewWriterStub()
-	req := &http.Request{Method: method, Header: make(http.Header)}
-	handler := http.HandlerFunc(func(writer http.ResponseWriter, r *http.Request) {
-		st.Expect(t, writer, stubbedWriter)
-		st.Expect(t, r.Header.Get("foo"), "")
-	})
-	interceptor.HandleHTTP(stubbedWriter, req, handler)
-}
-
 func TestHandleHTTP(t *testing.T) {
 	interceptor := Request(func(m *RequestModifier) {
 		m.Header.Set("foo", "bar")

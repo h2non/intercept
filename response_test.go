@@ -38,3 +38,13 @@ func TestResponseModifierReadString(t *testing.T) {
 	st.Expect(t, err, nil)
 	st.Expect(t, str, bodyStr)
 }
+
+func TestResponseModifierReadStringError(t *testing.T) {
+	req := &http.Request{}
+	body := ioutil.NopCloser(&errorReader{})
+	resp := &http.Response{Body: body}
+	modifier := NewResponseModifier(req, resp)
+	str, err := modifier.ReadString()
+	st.Expect(t, err, errRead)
+	st.Expect(t, str, "")
+}

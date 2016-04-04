@@ -187,3 +187,14 @@ func TestResponseModifierString(t *testing.T) {
 	st.Expect(t, err, nil)
 	st.Expect(t, string(body), "Rick")
 }
+
+func TestResponseModifierByte(t *testing.T) {
+	req := &http.Request{}
+	resp := &http.Response{}
+	modifier := NewResponseModifier(req, resp)
+	bodyBytes := []byte("Rick")
+	modifier.Bytes(bodyBytes)
+	body, err := ioutil.ReadAll(resp.Body)
+	st.Expect(t, err, nil)
+	st.Expect(t, string(body), "Rick")
+}

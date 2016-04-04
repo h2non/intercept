@@ -1,6 +1,7 @@
 package intercept
 
 import (
+	"encoding/json"
 	"github.com/nbio/st"
 	"io/ioutil"
 	"net/http"
@@ -69,4 +70,56 @@ func TestResponseModifierReadBytesError(t *testing.T) {
 	bytes, err := modifier.ReadBytes()
 	st.Expect(t, err, errRead)
 	st.Expect(t, string(bytes), "")
+}
+
+func TestResponseModifierDecodeJSON(t *testing.T) {
+	req := &http.Request{}
+	bodyStr := `{"name":"Rick"}`
+	strReader := strings.NewReader(bodyStr)
+	body := ioutil.NopCloser(strReader)
+	resp := &http.Response{Body: body}
+	modifier := NewResponseModifier(req, resp)
+	u := user{}
+	err := modifier.DecodeJSON(&u)
+	st.Expect(t, err, nil)
+	st.Expect(t, u.Name, "Rick")
+}
+
+func TestResponseModifierDecodeJSONErrorFromReadBytes(t *testing.T) {
+	req := &http.Request{}
+	body := ioutil.NopCloser(&errorReader{})
+	resp := &http.Response{Body: body}
+	modifier := NewResponseModifier(req, resp)
+	u := user{}
+	err := modifier.DecodeJSON(&u)
+	st.Expect(t, err, errRead)
+	st.Expect(t, u.Name, "")
+}
+
+func TestResponseModifierDecodeJSONErrorFromEOF(t *testing.T) {
+	req := &http.Request{}
+	bodyStr := ""
+	strReader := strings.NewReader(bodyStr)
+	body := ioutil.NopCloser(strReader)
+	resp := &http.Response{Body: body}
+	modifier := NewResponseModifier(req, resp)
+	u := user{}
+	err := modifier.DecodeJSON(&u)
+	st.Expect(t, err, nil)
+	st.Expect(t, u.Name, "")
+}
+
+func TestResponseModifierDecodeJSONErrorFromDecode(t *testing.T) {
+	req := &http.Request{}
+	bodyStr := "/"
+	strReader := strings.NewReader(bodyStr)
+	body := ioutil.NopCloser(strReader)
+	resp := &http.Response{Body: body}
+	modifier := NewResponseModifier(req, resp)
+	u := user{}
+	err := modifier.DecodeJSON(&u)
+	_, ok := (err).(*json.SyntaxError)
+	st.Expect(t, ok, true)
+	st.Expect(t, err.Error(), "invalid character '/' looking for beginning of value")
+	st.Expect(t, u.Name, "")
 }

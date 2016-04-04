@@ -48,3 +48,25 @@ func TestResponseModifierReadStringError(t *testing.T) {
 	st.Expect(t, err, errRead)
 	st.Expect(t, str, "")
 }
+
+func TestResponseModifierReadBytes(t *testing.T) {
+	req := &http.Request{}
+	bodyStr := `{"name":"Rick"}`
+	strReader := strings.NewReader(bodyStr)
+	body := ioutil.NopCloser(strReader)
+	resp := &http.Response{Body: body}
+	modifier := NewResponseModifier(req, resp)
+	bytes, err := modifier.ReadBytes()
+	st.Expect(t, err, nil)
+	st.Expect(t, string(bytes), bodyStr)
+}
+
+func TestResponseModifierReadBytesError(t *testing.T) {
+	req := &http.Request{}
+	body := ioutil.NopCloser(&errorReader{})
+	resp := &http.Response{Body: body}
+	modifier := NewResponseModifier(req, resp)
+	bytes, err := modifier.ReadBytes()
+	st.Expect(t, err, errRead)
+	st.Expect(t, string(bytes), "")
+}

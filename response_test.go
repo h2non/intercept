@@ -2,6 +2,7 @@ package intercept
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"github.com/nbio/st"
 	"io/ioutil"
 	"net/http"
@@ -121,5 +122,57 @@ func TestResponseModifierDecodeJSONErrorFromDecode(t *testing.T) {
 	_, ok := (err).(*json.SyntaxError)
 	st.Expect(t, ok, true)
 	st.Expect(t, err.Error(), "invalid character '/' looking for beginning of value")
+	st.Expect(t, u.Name, "")
+}
+
+func TestResponseModifierDecodeXML(t *testing.T) {
+	req := &http.Request{}
+	bodyStr := `<Person><Name>Rick</Name></Person>`
+	strReader := strings.NewReader(bodyStr)
+	body := ioutil.NopCloser(strReader)
+	resp := &http.Response{Body: body}
+	modifier := NewResponseModifier(req, resp)
+	u := user{}
+	err := modifier.DecodeXML(&u, nil)
+	st.Expect(t, err, nil)
+	st.Expect(t, u.Name, "Rick")
+}
+
+func TestResponseModifierDecodeXMLErrorFromReadBytes(t *testing.T) {
+	req := &http.Request{}
+	body := ioutil.NopCloser(&errorReader{})
+	resp := &http.Response{Body: body}
+	modifier := NewResponseModifier(req, resp)
+	u := user{}
+	err := modifier.DecodeXML(&u, nil)
+	st.Expect(t, err, errRead)
+	st.Expect(t, u.Name, "")
+}
+
+func TestResponseModifierDecodeXMLErrorFromDecode(t *testing.T) {
+	req := &http.Request{}
+	bodyStr := `]]>`
+	strReader := strings.NewReader(bodyStr)
+	body := ioutil.NopCloser(strReader)
+	resp := &http.Response{Body: body}
+	modifier := NewResponseModifier(req, resp)
+	u := user{}
+	err := modifier.DecodeXML(&u, nil)
+	_, ok := (err).(*xml.SyntaxError)
+	st.Expect(t, ok, true)
+	st.Expect(t, err.Error(), "XML syntax error on line 1: unescaped ]]> not in CDATA section")
+	st.Expect(t, u.Name, "")
+}
+
+func TestResponseModifierDecodeXMLEOF(t *testing.T) {
+	req := &http.Request{}
+	bodyStr := ""
+	strReader := strings.NewReader(bodyStr)
+	body := ioutil.NopCloser(strReader)
+	resp := &http.Response{Body: body}
+	modifier := NewResponseModifier(req, resp)
+	u := user{}
+	err := modifier.DecodeXML(&u, nil)
+	st.Expect(t, err, nil)
 	st.Expect(t, u.Name, "")
 }
